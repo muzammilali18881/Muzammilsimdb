@@ -1,0 +1,256 @@
+<html lang="en">
+ <head> 
+  <meta charset="UTF-8"> 
+  <meta name="viewport" content="width=device-width, initial-scale=1"> 
+  <title>Muzammil Mods SimdataBase</title> 
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: black;
+      color: #00ffcc;
+      font-family: Consolas, monospace;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+    #fullscreenBtn {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: #00ffcc;
+      color: black;
+      border: none;
+      padding: 6px 12px;
+      font-weight: bold;
+      font-size: 14px;
+      cursor: pointer;
+      z-index: 9999;
+      border-radius: 4px;
+      transition: background 0.2s ease;
+    }
+    #fullscreenBtn:hover { background: #00e6b8; }
+    #terminalOutput {
+      flex: 1;
+      padding: 15px;
+      white-space: pre-wrap;
+      overflow-y: auto;
+    }
+    #inputWrapper {
+      display: flex;
+      align-items: center;
+      padding: 10px 15px;
+      border-top: 1px solid #006655;
+      background: black;
+    }
+    #prompt {
+      margin-right: 8px;
+      user-select: none;
+    }
+    #terminalInput {
+      background: black;
+      border: none;
+      outline: none;
+      color: #00ffcc;
+      font-family: Consolas, monospace;
+      font-size: 16px;
+      flex: 1;
+    }
+    #cursor {
+      width: 10px;
+      height: 20px;
+      background: #00ffcc;
+      margin-left: 4px;
+      animation: blink 1s infinite;
+    }
+    @keyframes blink {
+      0%, 50%, 100% { opacity: 1; }
+      25%, 75% { opacity: 0; }
+    }
+    ::selection {
+      background: #004433;
+    }
+  </style> 
+ </head> 
+ <body> 
+  <button id="fullscreenBtn">⛶ Full Screen</button> 
+  <div id="terminalOutput">
+   _ _ _ 
+   <br>
+  </div> 
+  <div id="inputWrapper"> 
+   <span id="prompt">$</span> 
+   <input type="text" id="terminalInput" autocomplete="off" autofocus disabled> 
+   <span id="cursor"></span> 
+  </div> 
+  <script>
+  const terminalOutput = document.getElementById("terminalOutput");
+  const terminalInput = document.getElementById("terminalInput");
+  const prompt = document.getElementById("prompt");
+
+  let state = "welcome";
+
+  function printLine(text = "") {
+    terminalOutput.innerText += text + "\n";
+    terminalOutput.scrollTop = terminalOutput.scrollHeight;
+  }
+
+  function clearTerminal() {
+    terminalOutput.innerText = "";
+  }
+
+  const welcomeMessage = `
+
+▖  ▖▖▖▄▖▄▖▖  ▖▖  ▖▄▖▖ 
+▛▖▞▌▌▌▗▘▌▌▛▖▞▌▛▖▞▌▐ ▌ 
+▌▝ ▌▙▌▙▖▛▌▌▝ ▌▌▝ ▌▟▖▙▖
+                      
+       MUZAMMIL
+              KHADIM
+                     _      
+   /\\/\\    ___    __| | ___ 
+  /    \\  / _ \\  / _\` |/ __|
+ / /\\/\\ \\| (_) || (_| |\\__ \\
+ \\/    \\/ \\___/  \\__,_||___/
+                             
+
+Type 'getdata' and press Enter to start.
+`.trim().split('\n');
+
+  let welcomeIndex = 0;
+  function typeWelcome() {
+    if (welcomeIndex < welcomeMessage.length) {
+      printLine(welcomeMessage[welcomeIndex]);
+      welcomeIndex++;
+      setTimeout(typeWelcome, 100);
+    } else {
+      state = "waitingCommand";
+      prompt.textContent = "$";
+      terminalInput.disabled = false;
+      terminalInput.focus();
+    }
+  }
+
+  function runFakeHackingAnimation() {
+    const hackingLines = [
+      "Initializing connection...",
+      "Bypassing firewall...",
+      "Accessing database...",
+      "Fetching data...",
+      "Processing data...",
+      "Almost done..."
+    ];
+    let lineIndex = 0;
+
+    const interval = setInterval(() => {
+      if (lineIndex < hackingLines.length) {
+        printLine(hackingLines[lineIndex]);
+        lineIndex++;
+      } else {
+        clearInterval(interval);
+        printLine("\n✅ Access Granted by Muzammil ✅.\n");
+        state = "phoneInput";
+        prompt.textContent = "ENTER TARGET NUMBER:";
+        terminalInput.value = "";
+        terminalInput.disabled = false;
+        terminalInput.focus();
+      }
+    }, 800);
+  }
+
+  async function fetchData(phone) {
+    try {
+      printLine("⏳ Fetching data...");
+      const res = await fetch("api.php?num=" + phone);
+      const data = await res.json();
+
+      if (data && data.Name) {
+        const simDetails = `\n🔍 SIM DATA:
+👤 Name: ${data.Name || "Not found"}
+🆔 CNIC: ${data.CNIC || "Not found"}
+📍 Address: ${data.Address || "Not found"}
+📶 Operator: ${data.Operator || "Not found"}
+`;
+        let i = 0;
+        function typeData() {
+          if (i < simDetails.length) {
+            terminalOutput.innerText += simDetails[i];
+            i++;
+            terminalOutput.scrollTop = terminalOutput.scrollHeight;
+            setTimeout(typeData, 20);
+          } else {
+            prompt.textContent = "$";
+            terminalInput.disabled = false;
+            terminalInput.value = "";
+            terminalInput.focus();
+            state = "waitingCommand";
+          }
+        }
+        typeData();
+      } else {
+        printLine("❌ No data found.");
+        prompt.textContent = "$";
+        terminalInput.disabled = false;
+        terminalInput.value = "";
+        terminalInput.focus();
+        state = "waitingCommand";
+      }
+    } catch (err) {
+      printLine("❌ Error fetching data.");
+      console.error(err);
+      prompt.textContent = "$";
+      terminalInput.disabled = false;
+      terminalInput.value = "";
+      terminalInput.focus();
+      state = "waitingCommand";
+    }
+  }
+
+  terminalInput.disabled = true;
+  typeWelcome();
+
+  terminalInput.addEventListener("keydown", async function(e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const input = terminalInput.value.trim();
+      if (!input) return;
+
+      if (state === "waitingCommand") {
+        printLine("$ " + input);
+        if (input.toLowerCase() === "getdata") {
+          terminalInput.value = "";
+          terminalInput.disabled = true;
+          state = "hacking";
+          runFakeHackingAnimation();
+        } else {
+          printLine(`❌ Unknown command: ${input}`);
+          printLine("");
+          terminalInput.value = "";
+        }
+      } else if (state === "phoneInput") {
+        if (!input.match(/^[1-9][0-9]{8,10}$/)) {
+          printLine("❌ Invalid number. Use format without 0 or 92.");
+          terminalInput.value = "";
+          return;
+        }
+        printLine("ENTER TARGET NUMBER: " + input);
+        terminalInput.value = "";
+        terminalInput.disabled = true;
+        await fetchData(input);
+      }
+    }
+  });
+
+  document.getElementById("fullscreenBtn").addEventListener("click", () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch((err) => {
+        alert(`Error attempting to enable full-screen mode: ${err.message}`);
+      });
+    } else {
+      document.exitFullscreen();
+    }
+  });
+</script> 
+ </body>
+  </html>
